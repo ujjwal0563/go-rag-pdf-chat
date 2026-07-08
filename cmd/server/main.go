@@ -1,17 +1,21 @@
 package main
 
-import "github.com/gin-gonic/gin"
+import (
+	"log"
+
+	"github.com/ujjwal0563/go-rag-pdf-chat/internal/config"
+	"github.com/ujjwal0563/go-rag-pdf-chat/internal/router"
+)
 
 func main() {
 
-	router := gin.Default()
+	cfg := config.Load()
 
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status":  "ok",
-			"message": "GoRAG server is running",
-		})
-	})
+	r := router.SetupRouter()
 
-	router.Run(":8080")
+	log.Printf("Server running on port %s", cfg.Port)
+
+	if err := r.Run(":" + cfg.Port); err != nil {
+		log.Fatal(err)
+	}
 }

@@ -7,9 +7,12 @@ import (
 )
 
 func SetupRouter() *gin.Engine {
+
 	router := gin.Default()
 
 	router.GET("/health", handlers.Health)
+
+	router.POST("/upload", handlers.UploadPDF)
 
 	return router
 }

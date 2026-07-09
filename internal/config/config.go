@@ -11,6 +11,7 @@ type Config struct {
 	Port         string
 	GeminiAPIKey string
 	QdrantURL    string
+	QdrantAPIKey string
 	UploadPath   string
 }
 
@@ -22,7 +23,8 @@ func Load() *Config {
 	return &Config{
 		Port:         getEnv("PORT", "8080"),
 		GeminiAPIKey: getEnv("GEMINI_API_KEY", ""),
-		QdrantURL:    getEnv("QDRANT_URL", "http://localhost:6333"),
+		QdrantURL:    getEnv("QDRANT_URL", ""),
+		QdrantAPIKey: getEnv("QDRANT_API_KEY", ""),
 		UploadPath:   getEnv("UPLOAD_PATH", "uploads"),
 	}
 }

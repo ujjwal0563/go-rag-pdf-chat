@@ -18,5 +18,7 @@ func SetupRouter() *gin.Engine {
 
 	router.POST("/chunk", handlers.ChunkPDF)
 
+	router.POST("/embed", handlers.GenerateEmbeddings)
+
 	return router
 }

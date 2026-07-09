@@ -38,7 +38,13 @@ func SavePDF(file *multipart.FileHeader, uploadPath string) (string, error) {
 		return "", err
 	}
 
+	// Print information
 	fmt.Println("PDF Saved:", dst)
+
+	info, err := os.Stat(dst)
+	if err == nil {
+		fmt.Println("Saved file size:", info.Size(), "bytes")
+	}
 
 	return file.Filename, nil
 }

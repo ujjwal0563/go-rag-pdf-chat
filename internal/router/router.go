@@ -14,5 +14,7 @@ func SetupRouter() *gin.Engine {
 
 	router.POST("/upload", handlers.UploadPDF)
 
+	router.POST("/read", handlers.ReadPDF)
+
 	return router
 }

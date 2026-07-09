@@ -16,5 +16,7 @@ func SetupRouter() *gin.Engine {
 
 	router.POST("/read", handlers.ReadPDF)
 
+	router.POST("/chunk", handlers.ChunkPDF)
+
 	return router
 }

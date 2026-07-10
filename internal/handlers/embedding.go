@@ -10,6 +10,7 @@ import (
 	"github.com/ujjwal0563/go-rag-pdf-chat/internal/config"
 	"github.com/ujjwal0563/go-rag-pdf-chat/internal/embeddings"
 	"github.com/ujjwal0563/go-rag-pdf-chat/internal/pdf"
+	qdrantdb "github.com/ujjwal0563/go-rag-pdf-chat/internal/qdrant"
 )
 
 type EmbeddingRequest struct {
@@ -20,7 +21,7 @@ func GenerateEmbeddings(c *gin.Context) {
 
 	var req EmbeddingRequest
 
-	// Read JSON request
+	// Parse request
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid request body",
@@ -28,7 +29,7 @@ func GenerateEmbeddings(c *gin.Context) {
 		return
 	}
 
-	// Load configuration
+	// Load config
 	cfg := config.Load()
 
 	if cfg.GeminiAPIKey == "" {
@@ -47,10 +48,28 @@ func GenerateEmbeddings(c *gin.Context) {
 		return
 	}
 
-	// PDF path
-	filePath := filepath.Join(cfg.UploadPath, req.Filename)
+	// Connect to Qdrant
+	client, err := qdrantdb.NewClient(cfg)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	defer client.Close()
+
+	// Create collection if it doesn't exist
+	err = qdrantdb.CreateCollection(client)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
 
 	// Read PDF
+	filePath := filepath.Join(cfg.UploadPath, req.Filename)
+
 	text, err := pdf.ReadPDF(filePath)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -59,15 +78,15 @@ func GenerateEmbeddings(c *gin.Context) {
 		return
 	}
 
-	// Split into chunks
+	// Split text into chunks
 	chunks := chunk.SplitText(text, 500)
 
-	var vectors int
 	var embeddingDimension int
+	var totalVectors int
 
-	// Generate embeddings
-	for _, ch := range chunks {
+	for index, ch := range chunks {
 
+		// Generate embedding
 		vector, err := service.GenerateEmbedding(ch)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -76,17 +95,31 @@ func GenerateEmbeddings(c *gin.Context) {
 			return
 		}
 
-		// Save embedding dimension
 		embeddingDimension = len(vector)
 
-		vectors++
+		// Store vector in Qdrant
+		err = qdrantdb.InsertVector(
+			client,
+			req.Filename,
+			index,
+			ch,
+			vector,
+		)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		totalVectors++
 	}
 
-	// Response
 	c.JSON(http.StatusOK, gin.H{
-		"message":            "Embeddings generated successfully",
+		"message":            "Embeddings generated and stored successfully",
 		"embeddingDimension": embeddingDimension,
 		"totalChunks":        len(chunks),
-		"totalVectors":       vectors,
+		"totalVectors":       totalVectors,
 	})
 }

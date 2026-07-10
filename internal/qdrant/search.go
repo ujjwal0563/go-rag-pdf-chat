@@ -2,6 +2,7 @@ package qdrant
 
 import (
 	"context"
+	"fmt"
 
 	qdrant "github.com/qdrant/go-client/qdrant"
 )
@@ -21,10 +22,14 @@ func SearchSimilarChunks(
 
 	ctx := context.Background()
 
+	// Request payload in the response
+	withPayload := qdrant.NewWithPayload(true)
+
 	results, err := client.Query(ctx, &qdrant.QueryPoints{
 		CollectionName: CollectionName,
-		Query:          qdrant.NewQuery(queryVector...),
+		Query:          qdrant.NewQueryDense(queryVector),
 		Limit:          &limit,
+		WithPayload:    withPayload,
 	})
 
 	if err != nil {
@@ -34,6 +39,10 @@ func SearchSimilarChunks(
 	var searchResults []SearchResult
 
 	for _, point := range results {
+
+		// Debug output
+		fmt.Printf("Score: %f\n", point.Score)
+		fmt.Printf("Payload: %+v\n", point.Payload)
 
 		result := SearchResult{
 			Score: point.Score,
@@ -50,6 +59,8 @@ func SearchSimilarChunks(
 		if value, ok := point.Payload["text"]; ok {
 			result.Text = value.GetStringValue()
 		}
+
+		fmt.Printf("Search Result: %+v\n", result)
 
 		searchResults = append(searchResults, result)
 	}

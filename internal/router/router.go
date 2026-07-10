@@ -20,5 +20,7 @@ func SetupRouter() *gin.Engine {
 
 	router.POST("/embed", handlers.GenerateEmbeddings)
 
+	router.POST("/ask", handlers.AskQuestion)
+
 	return router
 }

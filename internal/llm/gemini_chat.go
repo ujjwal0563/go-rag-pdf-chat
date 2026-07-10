@@ -26,7 +26,7 @@ func NewGeminiChatService(apiKey string) (*GeminiChatService, error) {
 
 	return &GeminiChatService{
 		client: client,
-		model:  "gemini-2.5-flash",
+		model:  "models/gemini-flash-latest",
 	}, nil
 }
 

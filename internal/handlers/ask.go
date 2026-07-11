@@ -89,10 +89,18 @@ func AskQuestion(c *gin.Context) {
 		contextBuilder.WriteString(r.Text)
 		contextBuilder.WriteString("\n\n")
 
+		preview := r.Text
+
+		// Limit preview to first 300 characters
+		if len(preview) > 400 {
+			preview = preview[:400] + "..."
+		}
+
 		sources = append(sources, gin.H{
-			"filename": r.Filename,
-			"chunk":    r.Chunk,
-			"score":    r.Score,
+			"filename":    r.Filename,
+			"chunk":       r.Chunk,
+			"score":       r.Score,
+			"textPreview": preview,
 		})
 	}
 
